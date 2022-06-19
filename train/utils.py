@@ -40,7 +40,7 @@ def initialize_logger(file_dir):
     return logger
 
 
-def save_checkpoint(model_path, epoch, iteration, model, optimizer, layer, input_chan, output_chan):
+def save_checkpoint(model_path, epoch, iteration, model, optimizer, layer, input_chan, output_chan, drop, loss):
     """Save the checkpoint."""
     state = {
         'epoch': epoch,
@@ -49,7 +49,9 @@ def save_checkpoint(model_path, epoch, iteration, model, optimizer, layer, input
         'optimizer': optimizer.state_dict(),
     }
 
-    torch.save(state, os.path.join(model_path, 'layer%d_dim-%d-to-%d_%d.pkl' % (layer, input_chan, output_chan, epoch)))
+    # d is dropout percentage, loss is test loss percentage
+    torch.save(state, os.path.join(model_path, 'loss+%2.2f_layer%d_%d-to-%d_d+%.2f_%d.pkl'
+                                   % (loss*100, layer, input_chan, output_chan, drop, epoch)))
 
 
 def save_matv73(mat_name, var_name, var):
@@ -68,13 +70,14 @@ def get_reconstruction(input, num_split, dimension, model):
     input_split = torch.split(input, int(input.shape[3] / num_split), dim=dimension)
     output_split = []
     for i in range(num_split):
-        var_input = Variable(input_split[i].cuda(), volatile=True)
-        var_output = model(var_input)
-        output_split.append(var_output.data)
-        if i == 0:
-            output = output_split[i]
-        else:
-            output = torch.cat((output, output_split[i]), dim=dimension)
+        with torch.no_grad():
+            var_input = Variable(input_split[i].cuda())
+            var_output = model(var_input)
+            output_split.append(var_output.data)
+            if i == 0:
+                output = output_split[i]
+            else:
+                output = torch.cat((output, output_split[i]), dim=dimension)
 
     return output
 
@@ -82,10 +85,11 @@ def get_reconstruction(input, num_split, dimension, model):
 def reconstruction(rgb, model):
     """Output the final reconstructed hyperspectral images."""
     img_res = get_reconstruction(torch.from_numpy(rgb).float(), 1, 3, model)
-    img_res = img_res.cpu().numpy() * 4095
+    img_res = img_res.cpu().numpy()
     img_res = np.transpose(np.squeeze(img_res))
-    img_res_limits = np.minimum(img_res, 4095)
-    img_res_limits = np.maximum(img_res_limits, 0)
+    img_res_limits = img_res
+    # img_res_limits = np.minimum(img_res, 1)
+    # img_res_limits = np.maximum(img_res_limits, 0)
     return img_res_limits
 
 
