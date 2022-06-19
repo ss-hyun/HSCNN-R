@@ -40,10 +40,11 @@ def main():
                             pin_memory=True)
 
     # Model
+    drop = 0    # if 0, there is no dropout
     layer = 14
     input_channel = 30
     output_channel = 100
-    model = resblock(conv_relu_res_relu_block, layer, input_channel, output_channel)
+    model = resblock(conv_relu_res_relu_block, layer, input_channel, output_channel, drop)
     if torch.cuda.device_count() > 1:
         model = nn.DataParallel(model)
     if torch.cuda.is_available():
@@ -87,7 +88,8 @@ def main():
         # Save model
         if test_loss < record_test_loss:
             record_test_loss = test_loss
-            save_checkpoint(model_path, epoch, iteration, model, optimizer, layer, input_channel, output_channel)
+            save_checkpoint(model_path, epoch, iteration, model, optimizer, layer
+                            , input_channel, output_channel, drop, test_loss)
 
         # print loss 
         end_time = time.time()
