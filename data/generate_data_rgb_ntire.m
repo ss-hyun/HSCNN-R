@@ -1,6 +1,5 @@
 close all, clear all, clc
 
-userpath('C:\Users\csl\Desktop\HSCNN-R')
 
 %% global variable              
 global FILE_COUNT;
@@ -19,7 +18,7 @@ stride=80;
 prefix = ['train'; 'valid'];
 % type = 'clean';
 output_dir = './hdf5_data/';
-label = '_test';
+label = '_rep5_red-test';
 
 %% For loop  RGB-HS-HD5
 for p=1:1:size(prefix,1)
@@ -32,9 +31,9 @@ for p=1:1:size(prefix,1)
 
     input_dir = [ pre '_data/' ];
     if strcmp(pre, 'train') == 1
-        amount_hd5_image=20;  % 한 h5 file 에 들어가는 image num
+        amount_hd5_image=200;  % 한 h5 file 에 들어가는 image num
     else
-        amount_hd5_image=8;
+        amount_hd5_image=80;
     end
     input_data = dir(fullfile(input_dir, '*.mat'));
     order= randperm(size(input_data,1));

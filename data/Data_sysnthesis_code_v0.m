@@ -4,7 +4,8 @@ close all, clear all, clc
 
 load('GT_data.mat') 
 % Ref_data contains 1: Wavelength, 2: White background, 3: Dark background
-% e.g. if you want to select the wavelength information, you should call as
+% e.g. if you want to select the wav
+% elength information, you should call as
 % wavelength = Ref_data(:,1);
 % C_data contains raw data of 18 different colours
 %% Data normalization
@@ -111,7 +112,7 @@ for p=1:1:size(prefix,1)
             temp_filter=normpdf([1:1:output_channel],filter_pos(ff),filter_band_width(filter_pos(ff))/2);
 %             temp_filter=normpdf([1:1:base_channel],filter_pos(ff),filter_band_width(filter_pos(ff))/2);
             temp_filter=temp_filter/max(max(temp_filter));
-%             figure(12), plot(w_length,temp_filter),axis([400 700 0 1])
+%             figure(13), plot(w_length,temp_filter),axis([400 700 0 1])
 %             hold on
 %             pause(0.1)
             filters(:,ff)=temp_filter';
@@ -133,10 +134,11 @@ for p=1:1:size(prefix,1)
                 %         pause()
             end
 
-            %     figure(36), plot(filtered_w_length, temp_filtered_color,'o'),ylim([0 1])
-            %     pause()
+                figure(36), plot(filtered_w_length, temp_filtered_color,'o'),ylim([0 1])
+                pause()
             Filtered_colors(:,cc)=temp_filtered_color;
         end
+return
 
 
         %% Data generation
@@ -178,7 +180,7 @@ for p=1:1:size(prefix,1)
         %         pause()
 
             end
-            save(strcat(save_dir,num2str(nn+name_start),'.mat'),'GT_data','Filtered_data','-v7.3')
+%             save(strcat(save_dir,num2str(nn+name_start),'.mat'),'GT_data','Filtered_data','-v7.3')
         end
         %% Data viewing (데이터 확인용)
         % target_area=[120,100];

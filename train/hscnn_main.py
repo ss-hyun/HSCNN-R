@@ -21,12 +21,14 @@ def main():
     cudnn.benchmark = True
 
     # Dataset
-    train_data = DatasetFromHdf5('../data/hdf5_data/train_test.h5')
+    train_data = DatasetFromHdf5('../data/hdf5_data/train_rep5.h5')
     print(len(train_data))
-    val_data = DatasetFromHdf5('../data/hdf5_data/valid_test.h5')
+    val_data = DatasetFromHdf5('../data/hdf5_data/valid_rep5.h5')
     print(len(val_data))
     per_iter_time = len(train_data)
-
+    # print(torch.cuda.device_count())
+    # print(torch.cuda.is_available())
+    # exit()
     # Data Loader (Input Pipeline)
     train_data_loader = DataLoader(dataset=train_data,
                                    num_workers=3,
