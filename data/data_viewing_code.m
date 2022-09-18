@@ -1,3 +1,6 @@
+%% Data synthesis code for deep learning written by JYoon 2022.05.25
+close all, clear all, clc
+
 %% GT data viewing code
 load('GT_data_new_v2.mat')
 %%
