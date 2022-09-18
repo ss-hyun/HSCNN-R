@@ -15,6 +15,7 @@ average_white_bg=mean(Ref_data(:,2:6),2);
 white_bg=repmat(average_white_bg,[1 size(Ref_data,2)]);
 % dark_bg=repmat(Ref_data(:,3),[1 18]);
 
+% 121 - 1: wavelength, 2-6: white, 7~: color(23개, 5번 측정)
 Normalized_colors=(Ref_data)./(white_bg);
 %% Data viewing code (각 스펙트럼 확인)
 % for ii=1:1:23
@@ -26,14 +27,14 @@ Normalized_colors=(Ref_data)./(white_bg);
 
 % 450 nm (909) - 700 nm (1770)
 prefix = ['train'; 'valid'];
-input_channel=30;
+input_channel=20;
 output_channel=100;
 
 for p=1:1:size(prefix,1)
     pre = prefix(p,:);
     save_dir = [ pre '_data/' ];
     name_start = 0;  
-    total_colors=18;
+    total_colors=23;
 
     %% Parameters (여기서 파라미터 변환 가능)
     if strcmp(pre, 'train') == 1
@@ -41,13 +42,13 @@ for p=1:1:size(prefix,1)
         base_size_list = [ 500 500 800 800 ];   % 기본 바탕 이미지 크기
         seg_size_list = [ 50 25 40 80 ];        % 구역 segmentation 크기
         start_colors = 1;
-        end_colors = 15;
+        end_colors = 20;
     else
         numbers_of_data = 20;
         base_size_list = [ 500 500 800 800 ];   % 기본 바탕 이미지 크기
         seg_size_list = [ 50 25 40 80 ];        % 구역 segmentation 크기
-        start_colors = 16;
-        end_colors = 18;
+        start_colors = 21;
+        end_colors = 23;
     end
     img_size = [ 250 250 ]; % DL에 사용할 이미지 크기
     
@@ -105,7 +106,7 @@ for p=1:1:size(prefix,1)
         %% Filter generation
         filter_pos=round(linspace(909,1700,input_channel));
         filters=zeros(length(wavelength),input_channel);
-        
+%         length(filter_pos)
         for ff=1:1:length(filter_pos)
             temp_filter=normpdf([1:1:length(wavelength)],filter_pos(ff),filter_band_width(ff));
             temp_filter=temp_filter/max(max(temp_filter));
@@ -139,8 +140,11 @@ for p=1:1:size(prefix,1)
             Filtered_colors(:,cc)=temp_filtered_color;
         end
 
+%         save(strcat('./','color_data.mat'),'w_length','N_colors', 'filtered_w_length', 'Filtered_colors','-v7.3')
+%         return
+
         %% 색상 위치 change, list에 포함된 번호 color를 맨 뒤로 보내기(18 color 기준)
-        color_loc = [ 10 12 16 ];
+        color_loc = [ 1 5 15 ];
         F_front = [];
         F_back = [];
         N_front = [];
