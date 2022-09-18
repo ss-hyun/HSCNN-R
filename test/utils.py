@@ -91,9 +91,9 @@ def reconstruction(rgb, model):
     return img_res_limits
 
 
-def rrmse(img_res, img_gt):
+def rrmse(img_res, img_gt, mask_gt):
     """Calculate the relative RMSE"""
     error = img_res - img_gt
-    error_relative = error / img_gt
+    error_relative = error / mask_gt
     rrmse = np.mean((np.sqrt(np.power(error_relative, 2))))
     return rrmse
