@@ -50,8 +50,8 @@ def save_checkpoint(model_path, epoch, iteration, model, optimizer, layer, input
     }
 
     # d is dropout percentage, loss is test loss percentage
-    torch.save(state, os.path.join(model_path, 'layer%d_%d-to-%d_%d_%s+loss+%2.2f.pkl'
-                                   % (layer, input_chan, output_chan, epoch, str, loss*100)))
+    torch.save(state, os.path.join(model_path, 'layer%d_%d-to-%d_%s+loss+%2.2f_%d.pkl'
+                                   % (layer, input_chan, output_chan, str, loss*100, epoch)))
 
 
 def save_matv73(mat_name, var_name, var):
