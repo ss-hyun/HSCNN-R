@@ -40,7 +40,7 @@ def initialize_logger(file_dir):
     return logger
 
 
-def save_checkpoint(model_path, epoch, iteration, model, optimizer, layer, input_chan, output_chan, drop, loss):
+def save_checkpoint(model_path, epoch, iteration, model, optimizer, layer, input_chan, output_chan, str, loss):
     """Save the checkpoint."""
     state = {
         'epoch': epoch,
@@ -50,8 +50,8 @@ def save_checkpoint(model_path, epoch, iteration, model, optimizer, layer, input
     }
 
     # d is dropout percentage, loss is test loss percentage
-    torch.save(state, os.path.join(model_path, 'loss+%2.2f_layer%d_%d-to-%d_d+%.2f_%d.pkl'
-                                   % (loss*100, layer, input_chan, output_chan, drop, epoch)))
+    torch.save(state, os.path.join(model_path, 'layer%d_%d-to-%d_%d_%s+loss+%2.2f.pkl'
+                                   % (layer, input_chan, output_chan, epoch, str, loss*100)))
 
 
 def save_matv73(mat_name, var_name, var):
