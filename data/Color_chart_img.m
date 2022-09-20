@@ -2,12 +2,12 @@
 close all, clear all, clc
 
 %% GT data
-load('result_data/color_data.mat')
+load('result_data/color_data_input+chann+30.mat')
 c_w_length = w_length;
 c_filtered_w_length = filtered_w_length;
 c_Filtered_colors = Filtered_colors;
 c_N_colors = N_colors;
-load('result_data/blood_data.mat')
+load('result_data/biological_data_input+chann+30.mat')
 b_w_length = w_length;
 b_filtered_w_length = filtered_w_length;
 b_Filtered_colors = Filtered_colors;
@@ -22,8 +22,9 @@ seg_size = 50;
 padd = 40;
 term = 30;
 total_colors = 23;
-total_blood = 4;
-total = total_blood + total_colors;
+total_gap = 2;
+total_bio = 4;
+total = total_bio + total_gap + total_colors;
 start_index = 7;
 
 F_color_chart = zeros([base_w_size base_h_size input_channel]);
@@ -34,12 +35,14 @@ for j=0:1:5
         order = i + 5*j + 1;
         if order > total
             break;
-        elseif order > total_colors
+        elseif order > total_colors + total_gap
             w_length = b_w_length;
             filtered_w_length = b_filtered_w_length;
             Filtered_colors = b_Filtered_colors;
             N_colors = b_N_colors;
-            data_index = order - total_colors;
+            data_index = order - total_colors - total_gap + 4;
+        elseif order > total_colors
+            continue
         else
             w_length = c_w_length;
             filtered_w_length = c_filtered_w_length;
@@ -84,7 +87,7 @@ end
 %     figure(35), imagesc(F_color_chart(:,:,i)),axis image, colormap('bone'), colorbar
 %     pause(0.2)
 % end
-
+% 
 % % Show output color chart
 % for i=1:1:output_channel
 %     figure(35), imagesc(N_color_chart(:,:,i)),axis image, colormap('bone'), colorbar
@@ -92,9 +95,8 @@ end
 % end
 
 save_dir = 'result_data/';
-input_name = 'input_chart+blood.mat';
-gt_name = 'GT_chart+blood.mat';
+input_name = ['input_chart+bio_chann+' int2str(input_channel) '.mat'];
+gt_name = 'GT_chart+bio.mat';
 save(strcat(save_dir,input_name),'F_color_chart', 'filtered_w_length','-v7.3')
 save(strcat(save_dir,gt_name),'N_color_chart', 'w_length','-v7.3')
 
-return
