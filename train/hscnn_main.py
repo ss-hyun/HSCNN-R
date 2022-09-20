@@ -10,6 +10,7 @@ from torch.autograd import Variable
 import os
 import time
 import scipy.io as sio
+import math
 
 from dataset import DatasetFromHdf5
 from resblock import resblock, conv_relu_res_relu_block
@@ -21,11 +22,12 @@ def main():
     cudnn.benchmark = True
 
     # Dataset
-    train_data = DatasetFromHdf5('../data/hdf5_data/train_rep5.h5')
+    train_data = DatasetFromHdf5('../data/hdf5_data/train_lipid+1+2_23_rep5_valid-1-5-15-lipid+1_input+chann+30.h5')
     print(len(train_data))
-    val_data = DatasetFromHdf5('../data/hdf5_data/valid_rep5.h5')
+    val_data = DatasetFromHdf5('../data/hdf5_data/valid_lipid+1+2_23_rep5_valid-1-5-15-lipid+1_input+chann+30.h5')
     print(len(val_data))
     per_iter_time = len(train_data)
+    header = '23+lipid+1+2_1-5-15-lipid+1'
     # print(torch.cuda.device_count())
     # print(torch.cuda.is_available())
     # exit()
@@ -54,12 +56,12 @@ def main():
 
     # Parameters, Loss and Optimizer
     start_epoch = 0
-    end_epoch = 1000
+    end_epoch = 300
     init_lr = 0.0002
     iteration = 0
     record_test_loss = 1000
     criterion = rrmse_loss
-    optimizer = torch.optim.Adam(model.parameters(), lr=init_lr, betas=(0.9, 0.999), eps=1e-08, weight_decay=0)
+    optimizer = torch.optim.Adam(model.parameters(), lr=init_lr, betas=(0.9, 0.999), eps=1e-09, weight_decay=0)
 
     model_path = './models/'
     if not os.path.exists(model_path):
@@ -84,14 +86,14 @@ def main():
 
         start_time = time.time()
         train_loss, iteration, lr = train(train_data_loader, model, criterion, optimizer, iteration, init_lr
-                                          , end_epoch, max_iter=per_iter_time * end_epoch, power=1.5)
+                                          , epoch, end_epoch, max_iter=per_iter_time * end_epoch)
         test_loss = validate(val_loader, model, criterion)
 
         # Save model
         if test_loss < record_test_loss:
             record_test_loss = test_loss
             save_checkpoint(model_path, epoch, iteration, model, optimizer, layer
-                            , input_channel, output_channel, drop, test_loss)
+                            , input_channel, output_channel, header, test_loss)
 
         # print loss 
         end_time = time.time()
@@ -106,7 +108,7 @@ def main():
 
 
 # Training 
-def train(train_data_loader, model, criterion, optimizer, iteration, init_lr, end_epoch, max_iter=1e8, power=1.5):
+def train(train_data_loader, model, criterion, optimizer, iteration, init_lr, epoch, end_epoch, max_iter=1e8):
     losses = AverageMeter()
     for i, (images, labels) in enumerate(train_data_loader.dataset):
         labels = labels.cuda(non_blocking=True)
@@ -116,7 +118,7 @@ def train(train_data_loader, model, criterion, optimizer, iteration, init_lr, en
 
         # Decaying Learning Rate
 
-        lr = poly_lr_scheduler(optimizer, init_lr, iteration, max_iter=max_iter, power=power)
+        lr = poly_lr_scheduler(optimizer, init_lr, iteration, epoch, end_epoch, max_iter=max_iter)
         iteration = iteration + 1
 
         # Forward + Backward + Optimize       
@@ -158,8 +160,8 @@ def validate(val_loader, model, criterion):
 
 
 # Learning rate
-def poly_lr_scheduler(optimizer, init_lr, iteraion, lr_decay_iter=1,
-                      max_iter=100, power=0.9):
+def poly_lr_scheduler(optimizer, init_lr, iteraion, epoch, end_epoch,
+                      lr_decay_iter=1, max_iter=100):
     """Polynomial decay of learning rate
         :param init_lr is base learning rate
         :param iter is a current iteration
@@ -171,7 +173,7 @@ def poly_lr_scheduler(optimizer, init_lr, iteraion, lr_decay_iter=1,
     if iteraion % lr_decay_iter or iteraion > max_iter:
         return optimizer
 
-    lr = init_lr * (1 - iteraion / max_iter) ** power
+    lr = init_lr * (1 + math.cos(epoch * math.pi / end_epoch)) / 2
     for param_group in optimizer.param_groups:
         param_group['lr'] = lr
 
