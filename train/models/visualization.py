@@ -1,0 +1,40 @@
+import os
+import matplotlib.pyplot as plt
+import pandas as pd
+from matplotlib.animation import FuncAnimation
+
+
+f, axes = plt.subplots(1, 2)
+f.set_size_inches((14, 6))
+f.suptitle('Loss', fontsize=15)
+
+
+def animate(i):
+    try:
+        data = pd.read_csv('loss.csv')
+    except pd.errors.EmptyDataError:
+        print('Empty csv file!')
+        return
+
+    x = data['epoch']
+    y1 = data['train_loss']
+    y2 = data['test_loss']
+
+    plt.cla()
+    axes[0].set_title('Full Range')
+    axes[0].plot(x, y1, 'r', label='train')
+    axes[0].plot(x, y2, 'b', label='test')
+
+    axes[1].set_title('Range < 0.1')
+    axes[1].set_ylim((0, 0.1))
+    axes[1].plot(x, y1, 'r', label='train')
+    axes[1].plot(x, y2, 'b', label='test')
+
+    plt.legend()
+    plt.tight_layout()
+
+
+ani = FuncAnimation(plt.gcf(), animate, interval=1000)
+
+plt.tight_layout()
+plt.show()
