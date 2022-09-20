@@ -13,14 +13,16 @@ def animate(i):
     try:
         data = pd.read_csv('loss.csv')
     except pd.errors.EmptyDataError:
+        axes[0].cla()
+        axes[1].cla()
         print('Empty csv file!')
         return
 
+    plt.cla()
     x = data['epoch']
     y1 = data['train_loss']
     y2 = data['test_loss']
 
-    plt.cla()
     axes[0].set_title('Full Range')
     axes[0].plot(x, y1, 'r', label='train')
     axes[0].plot(x, y2, 'b', label='test')
