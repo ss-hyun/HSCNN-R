@@ -15,9 +15,11 @@ from utils import save_matv73, reconstruction, rrmse
 
 os.environ['KMP_DUPLICATE_LIB_OK'] = 'True'
 
-model_path = './models/23_1-5-15+loss+1.81_layer14_30-to-100_113.pkl'
-model_label = model_path.split('/')[2].split('+')[0]\
-              + '_' + model_path.split('/')[2].split('+')[2][:4]
+model_path = './models/layer14_30-to-100_color+mix+4+loss+0.55_189.pkl'
+model_label = model_path.split('/')[2][:-4]
+input_chan = 30
+chan_label = 'chann+{}'.format(input_chan)
+
 img_path = './ss_results/'
 var_name = 'reconstruct'
 
@@ -32,7 +34,7 @@ model = model.cuda()
 model.eval()
 
 for img_name in sorted(os.listdir(img_path)):
-    if 'input' in img_name:
+    if 'input' in img_name and chan_label in img_name:
         print(img_name)
         img_path_name = os.path.join(img_path, img_name)
         # rgb = plt.imread(img_path_name)
