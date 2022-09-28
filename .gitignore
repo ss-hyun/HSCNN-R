@@ -2,6 +2,6 @@
 *.jpg
 *.mat
 *.ipynb_checkpoints
-train/**/*.pkl
+*.pkl
 *.pyc
 .idea/
