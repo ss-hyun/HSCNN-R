@@ -134,7 +134,7 @@ for p=1:1:size(prefix,1)
 %             pause(0.1)
             temp_filtered_color=zeros(input_channel,1);
             for tt=1:1:size(filters,2)
-                temp_filtered_color(tt,1)=sum(sum(temp_color.*filters(:,tt).*squeeze(filters(:,tt)>0.35)))/sum(sum(squeeze(filters(:,tt)>0.35)));
+                temp_filtered_color(tt,1)=sum(sum(temp_color.*filters(:,tt)))/sum(sum(squeeze(filters(:,tt)>0.35)));
         %         figure(34),plot(wavelength,temp_color.*filters(:,tt)),axis([400 700 0 1])
                 %         
                 %         pause()

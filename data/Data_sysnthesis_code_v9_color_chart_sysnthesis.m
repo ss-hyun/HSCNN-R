@@ -32,23 +32,23 @@ end
 
 
 %% Data viewing code (각 스펙트럼 확인)
-% for ii=24:1:53
+% for ii=1:1:23
 %     figure(35), plot(wavelength, Normalized_colors(:,(ii*5)+2)), title(num2str(ii)),axis([450 700 0 1])
 %     pause()
 % end
 % 숫자는 read_me.ppt에 있는 색상을 의미함.
 
 
-% 450 nm (909) - 700 nm (1770)
+%% 450 nm (909) - 700 nm (1770)
 prefix = ['train'; 'valid'];
-input_channel=30;
+input_channel=40;
 output_channel=100;
 
 for p=1:1:size(prefix,1)
     pre = prefix(p,:);
     save_dir = [ pre '_data/' ];
     name_start = 0;  
-    total_colors=53;
+    total_colors=23;
 
     %% Parameters (여기서 파라미터 변환 가능)
     if strcmp(pre, 'train') == 1
@@ -56,13 +56,14 @@ for p=1:1:size(prefix,1)
         base_size_list = [ 500 500 800 800 ];   % 기본 바탕 이미지 크기
         seg_size_list = [ 50 25 40 80 ];        % 구역 segmentation 크기
         start_colors = 1;
-        end_colors = 45;
+%         end_colors = 45;
+        end_colors = 20;
     else
         numbers_of_data = 20;
         base_size_list = [ 500 500 800 800 ];   % 기본 바탕 이미지 크기
         seg_size_list = [ 50 25 40 80 ];        % 구역 segmentation 크기
-        start_colors = 46;
-        end_colors = 53;
+        start_colors = 21;
+        end_colors = 23;
     end
     img_size = [ 250 250 ]; % DL에 사용할 이미지 크기
     
@@ -138,7 +139,7 @@ for p=1:1:size(prefix,1)
 %             pause(0.1)
             temp_filtered_color=zeros(input_channel,1);
             for tt=1:1:size(filters,2)
-                temp_filtered_color(tt,1)=sum(sum(temp_color.*filters(:,tt).*squeeze(filters(:,tt)>0.35)))/sum(sum(squeeze(filters(:,tt)>0.35)));
+                temp_filtered_color(tt,1)=sum(sum(temp_color.*filters(:,tt)))/sum(sum(squeeze(filters(:,tt)>0.45)));
         %         figure(34),plot(wavelength,temp_color.*filters(:,tt)),axis([400 700 0 1])
                 %         
                 %         pause()
@@ -153,13 +154,23 @@ for p=1:1:size(prefix,1)
 %                 pause()
             Filtered_colors(:,cc)=temp_filtered_color;
         end
-
-
-%         save(strcat('./','color_data.mat'),'w_length','N_colors', 'filtered_w_length', 'Filtered_colors','-v7.3')
+% for i=1:1:23
+%     ii = 2+5*i
+%     figure(12),
+%     subplot(1,2,1),plot(N_colors(:,ii))
+%     subplot(1,2,2),plot(Filtered_colors(:,ii))
+%     pause()
+% end
+%            return
+%         N_colors = N_colors(:,122:271);
+%         Filtered_colors = Filtered_colors(:,122:271);
+%         name = ['result_data/mix+4_data_input+chann+',int2str(input_channel),'.mat'];
+%         save(name,'w_length','N_colors', 'filtered_w_length', 'Filtered_colors','-v7.3')
 %         return
 
         %% 색상 위치 change, list에 포함된 번호 color를 맨 뒤로 보내기(53 color 기준)
-        color_loc = [ 1 5 15 25 32 41 48 53 ];
+%         color_loc = [ 1 5 15 25 32 41 48 53 ];
+        color_loc = [ 1 10 17 ];
         F_front = [];
         F_back = [];
         N_front = [];
@@ -167,11 +178,11 @@ for p=1:1:size(prefix,1)
 
         for nn=1:1:total_colors
             if find(color_loc==nn)
-                start_index = (nn-1)*5 + 2;
+                start_index = (nn-1)*5 + 7;
                 F_back = [ F_back Filtered_colors(:,start_index:1:start_index+4) ];
                 N_back = [ N_back N_colors(:,start_index:1:start_index+4) ];
             else
-                start_index = (nn-1)*5 + 2;
+                start_index = (nn-1)*5 + 7;
                 F_front = [ F_front Filtered_colors(:,start_index:1:start_index+4) ];
                 N_front = [ N_front N_colors(:,start_index:1:start_index+4) ];
             end

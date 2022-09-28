@@ -11,15 +11,15 @@ global CREATED_FLAG;
 size_input=50;
 size_label=50;
 label_dimension=100;
-data_dimension=30;
+data_dimension=40;
 stride=80;
 
 
 prefix = ['train'; 'valid'];
 % type = 'clean';
 output_dir = './hdf5_data/';
-label = '_rep5_red-test';
-
+label = ['_val-1-10-17_input+chann+' int2str(data_dimension)];
+    
 %% For loop  RGB-HS-HD5
 for p=1:1:size(prefix,1)
     pre = prefix(p,:);

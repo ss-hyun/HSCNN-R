@@ -1,102 +1,107 @@
 %% Data synthesis code for deep learning written by JYoon 2022.05.25
 close all, clear all, clc
 
-%% GT data
-load('result_data/color_data_input+chann+30.mat')
-c_w_length = w_length;
-c_filtered_w_length = filtered_w_length;
-c_Filtered_colors = Filtered_colors;
-c_N_colors = N_colors;
-load('result_data/biological_data_input+chann+30.mat')
-b_w_length = w_length;
-b_filtered_w_length = filtered_w_length;
-b_Filtered_colors = Filtered_colors;
-b_N_colors = N_colors;
-%%
-
-input_channel=30;
+%% Specify condition
+input_channel=3;
 output_channel=100;
-base_w_size = 450;
-base_h_size = 530;
+chart_data_num = 0;
+bio_data_num = 0;
+blood_data_num = 0;
+mix_chart_data_num = 30;
+chart_data_path = ['result_data/color_data_input+chann+' int2str(input_channel) '.mat'];
+blood_data_path = ['result_data/blood_data_input+chann+' int2str(input_channel) '.mat'];
+bio_data_path = ['result_data/bio_data_input+chann+' int2str(input_channel) '.mat'];
+mix_data_path = ['result_data/mix+4_data_input+chann+' int2str(input_channel) '.mat'];
+
 seg_size = 50;
-padd = 40;
 term = 30;
-total_colors = 23;
-total_gap = 2;
-total_bio = 4;
-total = total_bio + total_gap + total_colors;
-start_index = 7;
+padd = 40;
+h_limit = 5;
 
-F_color_chart = zeros([base_w_size base_h_size input_channel]);
-N_color_chart = zeros([base_w_size base_h_size output_channel]);
+%% Data list
+data_tag = ["chart", "blood", "bio", "colorMix"];
+data_num = [chart_data_num, blood_data_num, bio_data_num, mix_chart_data_num];
+data_path = [chart_data_path, blood_data_path, bio_data_path, mix_data_path, ""];
+data_index = [7, 1, 1, 1];
+data_index_term = [5, 1, 1, 5];
 
-for j=0:1:5
-    for i=0:1:4
-        order = i + 5*j + 1;
-        if order > total
-            break;
-        elseif order > total_colors + total_gap
-            w_length = b_w_length;
-            filtered_w_length = b_filtered_w_length;
-            Filtered_colors = b_Filtered_colors;
-            N_colors = b_N_colors;
-            data_index = order - total_colors - total_gap + 4;
-        elseif order > total_colors
-            continue
-        else
-            w_length = c_w_length;
-            filtered_w_length = c_filtered_w_length;
-            Filtered_colors = c_Filtered_colors;
-            N_colors = c_N_colors;
-            data_index = start_index+5*(order-1);
-        end
+%% Make and Save each data
+for d=1:1:length(data_tag)
+    tag = data_tag(d);
+    num = data_num(d);
+    path = data_path(d);
+    start_index = data_index(d);
+    index_term = data_index_term(d);
+    
+    if num == 0
+        continue
+    end
+
+    load(path);
+
+    base_w_size = (fix((num-1)/h_limit)+1)*(seg_size+term) + 2*padd - term;
+    base_h_size = h_limit*(seg_size+term) + 2*padd - term;
+
+
+    F_color_chart = zeros([base_h_size base_w_size input_channel]);
+    N_color_chart = zeros([base_h_size base_w_size output_channel]);
+
+    for j=0:1:fix((num-1)/h_limit)
+        for i=0:1:h_limit-1
+            order = i + h_limit*j + 1;
+            if order > num
+                break;
+            end
+            index = start_index+index_term*(order-1);
+%             disp(index)
             for chann=1:1:input_channel
-                seg_img = zeros([seg_size seg_size]) + Filtered_colors(chann, data_index);
+                seg_img = zeros([seg_size seg_size]) + Filtered_colors(chann, index);
                 start_i = padd+(term+seg_size)*i;
                 start_j = padd+(term+seg_size)*j;
                 color = [ 
-                            zeros([start_i start_j]), zeros([start_i seg_size]), zeros([start_i base_h_size-start_j-seg_size]); ...
-                            zeros([seg_size start_j]), seg_img, zeros([seg_size base_h_size-start_j-seg_size]);
-                            zeros([base_w_size-start_i-seg_size start_j]), zeros([base_w_size-start_i-seg_size seg_size]), zeros([base_w_size-start_i-seg_size base_h_size-start_j-seg_size])
+                            zeros([start_i start_j]), zeros([start_i seg_size]), zeros([start_i base_w_size-start_j-seg_size]); ...
+                            zeros([seg_size start_j]), seg_img, zeros([seg_size base_w_size-start_j-seg_size]);
+                            zeros([base_h_size-start_i-seg_size start_j]), zeros([base_h_size-start_i-seg_size seg_size]), zeros([base_h_size-start_i-seg_size base_w_size-start_j-seg_size])
                         ];
     
                 F_color_chart(:,:,chann) = F_color_chart(:,:,chann) + color;
             end
     
             for chann=1:1:output_channel
-                seg_img = zeros([seg_size seg_size]) + N_colors(chann, data_index);
+                seg_img = zeros([seg_size seg_size]) + N_colors(chann, index);
                 start_i = padd+(term+seg_size)*i;
                 start_j = padd+(term+seg_size)*j;
                 color = [ 
-                            zeros([start_i start_j]), zeros([start_i seg_size]), zeros([start_i base_h_size-start_j-seg_size]); ...
-                            zeros([seg_size start_j]), seg_img, zeros([seg_size base_h_size-start_j-seg_size]);
-                            zeros([base_w_size-start_i-seg_size start_j]), zeros([base_w_size-start_i-seg_size seg_size]), zeros([base_w_size-start_i-seg_size base_h_size-start_j-seg_size])
+                            zeros([start_i start_j]), zeros([start_i seg_size]), zeros([start_i base_w_size-start_j-seg_size]); ...
+                            zeros([seg_size start_j]), seg_img, zeros([seg_size base_w_size-start_j-seg_size]);
+                            zeros([base_h_size-start_i-seg_size start_j]), zeros([base_h_size-start_i-seg_size seg_size]), zeros([base_h_size-start_i-seg_size base_w_size-start_j-seg_size])
                         ];
     
                 N_color_chart(:,:,chann) = N_color_chart(:,:,chann) + color;
             end
+        end
+    
+        if order > num
+            break;
+        end
     end
+    
+    % % Show input color chart
+    % for i=1:1:input_channel
+    %     figure(35), imagesc(F_color_chart(:,:,i)),axis image, colormap('bone'), colorbar
+    %     pause(0.2)
+    % end
+    % 
+    % % Show output color chart
+    % for i=1:1:output_channel
+    %     figure(35), imagesc(N_color_chart(:,:,i)),axis image, colormap('bone'), colorbar
+    %     pause(0.1)
+    % end
+    
+    save_dir = 'result_data/';
+    input_name = 'input_' + tag + '_chann+' + int2str(input_channel) + '.mat';
+    gt_name = 'GT_' + tag + '.mat';
+    save(strcat(save_dir,input_name),'F_color_chart', 'filtered_w_length','-v7.3')
+    save(strcat(save_dir,gt_name),'N_color_chart', 'w_length','-v7.3')
 
-    if order > total
-        break;
-    end
 end
-
-% % Show input color chart
-% for i=1:1:input_channel
-%     figure(35), imagesc(F_color_chart(:,:,i)),axis image, colormap('bone'), colorbar
-%     pause(0.2)
-% end
-% 
-% % Show output color chart
-% for i=1:1:output_channel
-%     figure(35), imagesc(N_color_chart(:,:,i)),axis image, colormap('bone'), colorbar
-%     pause(0.1)
-% end
-
-save_dir = 'result_data/';
-input_name = ['input_chart+bio_chann+' int2str(input_channel) '.mat'];
-gt_name = 'GT_chart+bio.mat';
-save(strcat(save_dir,input_name),'F_color_chart', 'filtered_w_length','-v7.3')
-save(strcat(save_dir,gt_name),'N_color_chart', 'w_length','-v7.3')
-

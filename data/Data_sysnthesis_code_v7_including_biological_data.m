@@ -283,7 +283,10 @@ for ii=1:1:size(sample_data,2)
 end
 
 bio_sample_data = resized_sample_data(:, 5:8);
-save(strcat('result_data/','biological_format_data.mat'),'bio_sample_data', '-v7.3')
+save(strcat('./','biological_format_data.mat'),'bio_sample_data', '-v7.3')
+
+blood_sample_data = resized_sample_data(:, 1:4);
+save(strcat('./','blood_sample_data.mat'),'blood_sample_data', '-v7.3')
 return
 %% 데이터 확인
 % for ii=1:1:size(sample_data,2)
@@ -295,45 +298,59 @@ return
 % hold off
 
 %%  Reshape_GT data
-w_length=imresize(wavelength(909:1770), [output_channel,1]);
-N_colors=imresize(resized_sample_data(909:1770,:), [output_channel,size(resized_sample_data,2)]);
+input_channel=10; 
+output_channel=100;
 
-%% Filter generation
-filter_pos=round(linspace(909,1700,input_channel));
-filters=zeros(length(wavelength),input_channel);
-% filter_transmittance=[1:1:output_channel]*0.4/output_channel+0.8;
-filter_band_width=round(linspace(15,75,output_channel));
-for ff=1:1:length(filter_pos)
-    temp_filter=normpdf([1:1:length(wavelength)],filter_pos(ff),filter_band_width(ff));
-    temp_filter=temp_filter/max(max(temp_filter));
-%     figure(12), plot(wavelength,temp_filter),axis([400 700 0 1])
-%     hold on
-%     pause(0.1)
-    filters(:,ff)=temp_filter';
-end
+for n=1:1:2
+    if n==1
+        resized_sample_data = blood_sample_data;
+        name = ['result_data/blood_data_input+chann+',int2str(input_channel),'.mat'];
+    else
+        resized_sample_data = bio_sample_data;
+        name = ['result_data/bio_data_input+chann+',int2str(input_channel),'.mat'];
+    end
 
-%% Filter applied spectrum
-Filtered_colors=[];
-filtered_w_length=imresize(wavelength(909:1770),[input_channel,1]);
-for cc=1:1:size(resized_sample_data,2)
-    temp_color=resized_sample_data(:,cc);
-    %     figure(35), plot(wavelength,temp_color),axis([450 700 0 1])
-    temp_filtered_color=zeros(input_channel,1);
-    for tt=1:1:size(filters,2)
-        temp_filtered_color(tt,1)=sum(sum(temp_color.*filters(:,tt).*squeeze(filters(:,tt)>0.35)))/sum(sum(squeeze(filters(:,tt)>0.35)));
-        
+
+    w_length=imresize(wavelength(909:1770), [output_channel,1]);
+    N_colors=imresize(resized_sample_data(909:1770,:), [output_channel,size(resized_sample_data,2)]);
+    
+    % Filter generation
+    filter_pos=round(linspace(909,1700,input_channel));
+    filters=zeros(length(wavelength),input_channel);
+    % filter_transmittance=[1:1:output_channel]*0.4/output_channel+0.8;
+    filter_band_width=round(linspace(15,75,output_channel));
+    for ff=1:1:length(filter_pos)
+        temp_filter=normpdf([1:1:length(wavelength)],filter_pos(ff),filter_band_width(ff));
+        temp_filter=temp_filter/max(max(temp_filter));
+    %     figure(12), plot(wavelength,temp_filter),axis([400 700 0 1])
+    %     hold on
+    %     pause(0.1)
+        filters(:,ff)=temp_filter';
     end
     
-%     figure(36), plot(filtered_w_length, temp_filtered_color,'o'),ylim([0 1]), hold on
-%     
-%     pause(0.1)
-    Filtered_colors(:,cc)=temp_filtered_color;
+    % Filter applied spectrum
+    Filtered_colors=[];
+    filtered_w_length=imresize(wavelength(909:1770),[input_channel,1]);
+    for cc=1:1:size(resized_sample_data,2)
+        temp_color=resized_sample_data(:,cc);
+        %     figure(35), plot(wavelength,temp_color),axis([450 700 0 1])
+        temp_filtered_color=zeros(input_channel,1);
+        for tt=1:1:size(filters,2)
+            temp_filtered_color(tt,1)=sum(sum(temp_color))/sum(sum(squeeze(filters(:,tt)>0.45)));
+            
+        end
+        
+    %     figure(36), plot(filtered_w_length, temp_filtered_color,'o'),ylim([0 1]), hold on
+    %     
+    %     pause(0.1)
+        Filtered_colors(:,cc)=temp_filtered_color;
+    end
+    
+    save(name,'w_length','N_colors', 'filtered_w_length', 'Filtered_colors','-v7.3')
+
 end
 
-
-save(strcat('result_data/','biological_data.mat'),'w_length','N_colors', 'filtered_w_length', 'Filtered_colors','-v7.3')
 return
-
 %% Data generation
 for fol=1:1:dataset_num
     cd(m_path)
