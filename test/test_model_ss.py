@@ -15,9 +15,9 @@ from utils import save_matv73, reconstruction, rrmse
 
 os.environ['KMP_DUPLICATE_LIB_OK'] = 'True'
 
-model_path = './models/layer14_30-to-100_color+mix+4+loss+0.55_189.pkl'
+model_path = './models/layer14_20-to-100_val-1-7-17+loss+4.25_105.pkl'
+input_chan = 20
 model_label = model_path.split('/')[2][:-4]
-input_chan = 30
 chan_label = 'chann+{}'.format(input_chan)
 
 img_path = './ss_results/'
@@ -26,7 +26,7 @@ var_name = 'reconstruct'
 save_point = torch.load(model_path)
 model_param = save_point['state_dict']
 drop = 0
-model = resblock(conv_relu_res_relu_block, 14, 30, 100, drop)
+model = resblock(conv_relu_res_relu_block, 14, input_chan, 100, drop)
 # model = nn.DataParallel(model)
 model.load_state_dict(model_param)
 
@@ -34,7 +34,7 @@ model = model.cuda()
 model.eval()
 
 for img_name in sorted(os.listdir(img_path)):
-    if 'input' in img_name and chan_label in img_name:
+    if 'input' in img_name and chan_label+'.mat' in img_name:
         print(img_name)
         img_path_name = os.path.join(img_path, img_name)
         # rgb = plt.imread(img_path_name)

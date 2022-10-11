@@ -7,10 +7,14 @@ import matplotlib.pyplot as plt
 os.environ['KMP_DUPLICATE_LIB_OK'] = 'True'
 
 img_path = './ss_results/'
-model_path = './models/layer14_30-to-100_color+mix+4+loss+0.55_189.pkl'
+model_path = './models/layer14_20-to-100_val-1-7-17+loss+4.25_105.pkl'
+input_chan = 20
 model_label = model_path.split('/')[2][:-4]
-input_img = 'chart+bio'
-input_chan = 30
+# input_img = 'bio'
+# dots = [(65, 65), (65, 145), (65, 225), (65, 305), (65, 65)]
+input_img = 'chart'
+dots = [(65, 65), (145, 385), (225, 225), (310, 145), (310, 385)]
+# dots = [(65, 65), (465, 65), (465, 145), (465, 225), (465, 305)]
 chan_label = 'chann+{}'.format(input_chan)
 
 for img_name in sorted(os.listdir(img_path)):
@@ -46,9 +50,6 @@ im = axes[0, 0].imshow(abs((recon-gt)/mask_gt).mean(axis=2))
 plt.colorbar(im, ax=axes[0, 0], fraction=0.046, pad=0.04)
 axes[0, 0].set_title('relative error mean')
 
-
-# dots = [(65, 65), (65, 305), (220, 385), (310, 385), (385, 225)]
-dots = [(65, 65), (465, 65), (465, 145), (465, 225), (465, 305)]
 for i, dot in enumerate(dots):
     axes[0, 0].scatter(dot[0], dot[1], c='red', s=8, marker='*')
     axes[0, 0].text(dot[0]-25, dot[1]-10, dot, size=9, color='white')
