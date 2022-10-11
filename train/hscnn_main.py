@@ -14,20 +14,26 @@ import math
 
 from dataset import DatasetFromHdf5
 from resblock import resblock, conv_relu_res_relu_block
-from utils import AverageMeter, initialize_logger, save_checkpoint, record_loss
+from utils import AverageMeter, initialize_logger, save_checkpoint, record_loss, rrmse
 from loss import rrmse_loss
 
 
 def main():
+    for i in range(10):
+        print(i)
+        whole_train()
+
+
+def whole_train():
     cudnn.benchmark = True
 
     # Dataset
-    train_data = DatasetFromHdf5('../data/hdf5_data/train_lipid+1+2_23_rep5_valid-1-5-15-lipid+1_input+chann+30.h5')
+    train_data = DatasetFromHdf5('../data/hdf5_data/train_val-1-10-17_input+chann+20.h5')
     print(len(train_data))
-    val_data = DatasetFromHdf5('../data/hdf5_data/valid_lipid+1+2_23_rep5_valid-1-5-15-lipid+1_input+chann+30.h5')
+    val_data = DatasetFromHdf5('../data/hdf5_data/valid_val-1-10-17_input+chann+20.h5')
     print(len(val_data))
     per_iter_time = len(train_data)
-    header = '23+lipid+1+2_1-5-15-lipid+1'
+    header = 'val-1-10-17_sam'
     # print(torch.cuda.device_count())
     # print(torch.cuda.is_available())
     # exit()
@@ -44,9 +50,9 @@ def main():
                             pin_memory=True)
 
     # Model
-    drop = 0    # if 0, there is no dropout
+    drop = 0  # if 0, there is no dropout
     layer = 14
-    input_channel = 30
+    input_channel = 20
     output_channel = 100
     model = resblock(conv_relu_res_relu_block, layer, input_channel, output_channel, drop)
     if torch.cuda.device_count() > 1:
@@ -56,17 +62,20 @@ def main():
 
     # Parameters, Loss and Optimizer
     start_epoch = 0
-    end_epoch = 300
+    end_epoch = 200
     init_lr = 0.0002
     iteration = 0
     record_test_loss = 1000
     criterion = rrmse_loss
+    test_criterion = rrmse_loss
+    # test_criterion = rrmse
     optimizer = torch.optim.Adam(model.parameters(), lr=init_lr, betas=(0.9, 0.999), eps=1e-09, weight_decay=0)
 
     model_path = './models/'
     if not os.path.exists(model_path):
         os.makedirs(model_path)
     loss_csv = open(os.path.join(model_path, 'loss.csv'), 'w+')
+    loss_csv.write('epoch,iteration,epoch_time,lr,train_loss,test_loss\n')
 
     log_dir = os.path.join(model_path, 'train.log')
     logger = initialize_logger(log_dir)
@@ -87,10 +96,11 @@ def main():
         start_time = time.time()
         train_loss, iteration, lr = train(train_data_loader, model, criterion, optimizer, iteration, init_lr
                                           , epoch, end_epoch, max_iter=per_iter_time * end_epoch)
-        test_loss = validate(val_loader, model, criterion)
+
+        test_loss = validate(val_loader, model, test_criterion)
 
         # Save model
-        if test_loss < record_test_loss:
+        if test_loss < record_test_loss or epoch == end_epoch or epoch == end_epoch / 2:
             record_test_loss = test_loss
             save_checkpoint(model_path, epoch, iteration, model, optimizer, layer
                             , input_channel, output_channel, header, test_loss)

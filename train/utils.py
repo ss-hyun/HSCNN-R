@@ -1,5 +1,7 @@
 from __future__ import division
 
+import math
+
 import torch
 import torch.nn as nn
 from torch.autograd import Variable
@@ -51,7 +53,7 @@ def save_checkpoint(model_path, epoch, iteration, model, optimizer, layer, input
 
     # d is dropout percentage, loss is test loss percentage
     torch.save(state, os.path.join(model_path, 'layer%d_%d-to-%d_%s+loss+%2.2f_%d.pkl'
-                                   % (layer, input_chan, output_chan, str, loss*100, epoch)))
+                                   % (layer, input_chan, output_chan, str, loss * 100, epoch)))
 
 
 def save_matv73(mat_name, var_name, var):
@@ -60,9 +62,6 @@ def save_matv73(mat_name, var_name, var):
 
 def record_loss(loss_csv, epoch, iteration, epoch_time, lr, train_loss, test_loss):
     """ Record many results."""
-    if epoch == 1:
-        loss_csv.write('epoch,iteration,epoch_time,lr,train_loss,test_loss\n')
-
     loss_csv.write('{},{},{},{},{},{}\n'.format(epoch, iteration, epoch_time, lr, train_loss, test_loss))
     loss_csv.flush()
     loss_csv.close
@@ -98,7 +97,35 @@ def reconstruction(rgb, model):
 
 def rrmse(img_res, img_gt):
     """Calculate the relative RMSE"""
-    error = img_res - img_gt
-    error_relative = error / img_gt
-    rrmse = np.mean((np.sqrt(np.power(error_relative, 2))))
+    error = torch.abs(img_res - img_gt) / img_gt
+    rrmse = torch.mean(error.view(-1))
+    # rrmse = np.mean((np.sqrt(np.power(error, 2))))
+    # chan = img_gt.shape[0]
+    # flat_error = error.clone().detach().view([chan, -1])
+    # flat_outputs = img_res.clone().detach().view([chan, -1])
+    # flat_label = img_gt.clone().detach().view([chan, -1])
+    # y1 = lambda a, b: (flat_outputs[a] - flat_outputs[b])
+    # y2 = lambda a, b: (flat_label[a] - flat_label[b])
+    # flat_rrmse = rrmse.clone().detach()
+    # for i in range(chan):
+    #     lf = i - 1 if i > 0 else 0
+    #     r = i + 1 if i < chan - 1 else chan - 1
+    #
+    #     flat_error[i] = (
+    #             torch.arccos(torch.round(
+    #                 torch.sqrt(((flat_rrmse ** 2 + y1(r, i) * y2(r, i)) ** 2)
+    #                            / (flat_rrmse ** 2 + y1(r, i) ** 2) / (flat_rrmse ** 2 + y2(r, i) ** 2))
+    #                 , decimals=3))
+    #             +
+    #             torch.arccos(torch.round(
+    #                 torch.sqrt(((flat_rrmse ** 2 + y1(i, lf) * y2(i, lf)) ** 2)
+    #                            / (flat_rrmse ** 2 + y1(i, lf) ** 2) / (flat_rrmse ** 2 + y2(i, lf) ** 2))
+    #                 , decimals=3))
+    #     )
+        # flat_error[i] = (
+        #     torch.abs((flat_outputs[r] - flat_outputs[i]) - (flat_label[r] - flat_label[i])) +
+        #     torch.abs((flat_outputs[i] - flat_outputs[lf]) - (flat_label[i] - flat_label[lf]))
+        #     )
+    # g_error = torch.mean(flat_error.view(-1))
+
     return rrmse
