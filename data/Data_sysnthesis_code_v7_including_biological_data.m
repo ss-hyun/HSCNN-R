@@ -11,7 +11,7 @@ base_size=[500 500]; % 기본 바탕 이미지 크기
 img_size=[250 250]; % DL에 사용할 이미지 크기
 seg_size=25; % 더 작게 조정하면 여러개 컬러 데이터 학습 가능
 total_colors=18;
-input_channel=50; 
+input_channel=35; 
 output_channel=100;
 
 
@@ -298,7 +298,7 @@ return
 % hold off
 
 %%  Reshape_GT data
-input_channel=10; 
+input_channel=50;
 output_channel=100;
 
 for n=1:1:2
@@ -336,8 +336,7 @@ for n=1:1:2
         %     figure(35), plot(wavelength,temp_color),axis([450 700 0 1])
         temp_filtered_color=zeros(input_channel,1);
         for tt=1:1:size(filters,2)
-            temp_filtered_color(tt,1)=sum(sum(temp_color))/sum(sum(squeeze(filters(:,tt)>0.45)));
-            
+            temp_filtered_color(tt,1)=sum(sum(temp_color.*filters(:,tt)))/sum(sum(squeeze(filters(:,tt)>0.45)));
         end
         
     %     figure(36), plot(filtered_w_length, temp_filtered_color,'o'),ylim([0 1]), hold on
