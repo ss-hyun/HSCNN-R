@@ -60,9 +60,6 @@ def save_matv73(mat_name, var_name, var):
 
 def record_loss(loss_csv, epoch, iteration, epoch_time, lr, train_loss, test_loss):
     """ Record many results."""
-    if epoch == 1:
-        loss_csv.write('epoch,iteration,epoch_time,lr,train_loss,test_loss\n')
-
     loss_csv.write('{},{},{},{},{},{}\n'.format(epoch, iteration, epoch_time, lr, train_loss, test_loss))
     loss_csv.flush()
     loss_csv.close

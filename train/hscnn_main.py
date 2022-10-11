@@ -67,6 +67,7 @@ def main():
     if not os.path.exists(model_path):
         os.makedirs(model_path)
     loss_csv = open(os.path.join(model_path, 'loss.csv'), 'w+')
+    loss_csv.write('epoch,iteration,epoch_time,lr,train_loss,test_loss\n')
 
     log_dir = os.path.join(model_path, 'train.log')
     logger = initialize_logger(log_dir)
