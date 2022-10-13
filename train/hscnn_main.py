@@ -19,19 +19,43 @@ from loss import rrmse_loss
 
 
 def main():
+    train_datas = ['train_val-9-12-14_input+chann+20.h5',
+                   'train_val-1-10-17_input+chann+20.h5',
+                   'train_val-14-15-18_input+chann+20.h5']
+    val_datas = ['valid_val-9-12-14_input+chann+20.h5',
+                 'valid_val-1-10-17_input+chann+20.h5',
+                 'valid_val-14-15-18_input+chann+20.h5']
+    headers = ['val-9-12-14'
+               , 'val-1-10-17,'
+               , 'val-14-15-18']
+
+    for i in range(len(train_datas)):
+        train_data = DatasetFromHdf5('../data/hdf5_data/' + train_datas[i])
+        print(len(train_data))
+        val_data = DatasetFromHdf5('../data/hdf5_data/' + val_datas[i])
+        print(len(val_data))
+        header = headers[i]
+        for j in range(3):
+            print('iter', j)
+            whole_train(train_data, val_data, header)
+
+
+def whole_train(train_data, val_data, header):
     cudnn.benchmark = True
 
     # Dataset
-    train_data = DatasetFromHdf5('../data/hdf5_data/train_lipid+1+2_23_rep5_valid-1-5-15-lipid+1_input+chann+30.h5')
-    print(len(train_data))
-    val_data = DatasetFromHdf5('../data/hdf5_data/valid_lipid+1+2_23_rep5_valid-1-5-15-lipid+1_input+chann+30.h5')
-    print(len(val_data))
-    per_iter_time = len(train_data)
-    header = '23+lipid+1+2_1-5-15-lipid+1'
+    # train_data = DatasetFromHdf5('../data/hdf5_data/train_val-1-7-17_input+chann+20.h5')
+    # print(len(train_data))
+    # val_data = DatasetFromHdf5('../data/hdf5_data/valid_val-1-7-17_input+chann+20.h5')
+    # print(len(val_data))
+    # header = 'val-1-7-17'
     # print(torch.cuda.device_count())
     # print(torch.cuda.is_available())
     # exit()
+
     # Data Loader (Input Pipeline)
+    per_iter_time = len(train_data)
+
     train_data_loader = DataLoader(dataset=train_data,
                                    num_workers=3,
                                    batch_size=64,
@@ -44,9 +68,9 @@ def main():
                             pin_memory=True)
 
     # Model
-    drop = 0    # if 0, there is no dropout
+    drop = 0  # if 0, there is no dropout
     layer = 14
-    input_channel = 30
+    input_channel = 20
     output_channel = 100
     model = resblock(conv_relu_res_relu_block, layer, input_channel, output_channel, drop)
     if torch.cuda.device_count() > 1:
@@ -56,7 +80,7 @@ def main():
 
     # Parameters, Loss and Optimizer
     start_epoch = 0
-    end_epoch = 300
+    end_epoch = 200
     init_lr = 0.0002
     iteration = 0
     record_test_loss = 1000
