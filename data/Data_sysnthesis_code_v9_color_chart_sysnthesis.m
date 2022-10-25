@@ -41,7 +41,7 @@ end
 
 %% 450 nm (909) - 700 nm (1770)
 prefix = ['train'; 'valid'];
-input_channel=40;
+input_channel=20;
 output_channel=100;
 
 for p=1:1:size(prefix,1)
@@ -171,7 +171,7 @@ for p=1:1:size(prefix,1)
         %% 색상 위치 change, list에 포함된 번호 color를 맨 뒤로 보내기(53 color 기준)
 %         color_loc = [ 1 5 15 25 32 41 48 53 ];
         color_loc = [ 1 10 17 ];
-        offset_num = 4;
+        offset_num = 0;
         F_front = [];
         F_back = [];
         N_front = [];
@@ -186,11 +186,11 @@ for p=1:1:size(prefix,1)
                 %N_temp(:,(ii-1)*5+1) = N_colors(:, start_index+ii-1);
                 F_offset = Filtered_colors(:, start_index+ii-1);
                 N_offset = N_colors(:, start_index+ii-1);
-                offset_min = 0.02 - min(min(F_offset), min(N_offset));
-                offset_max = 0.98 - max(max(F_offset), max(N_offset));
+                offset_min = 0.11 - min(min(F_offset), min(N_offset));
+                offset_max = 0.89 - max(max(F_offset), max(N_offset));
                 offset_term = (offset_max - offset_min)/(offset_num - 1);
                 for jj=1:1:offset_num
-                    offset = offset_min + offset_term*(jj-1) + (rand(1)-0.5)*0.02;
+                    offset = offset_min + offset_term*(jj-1) + (rand(1)-0.5)*0.2;
                     F_offset(:,jj+1) = F_offset(:,1) + offset;
                     N_offset(:,jj+1) = N_offset(:,1) + offset;
                 end
