@@ -13,9 +13,9 @@ import scipy.io as sio
 import math
 
 from dataset import DatasetFromHdf5
-from resblock import resblock, conv_relu_res_relu_block
-from utils import AverageMeter, initialize_logger, save_checkpoint, record_loss, rrmse
-from loss import rrmse_loss
+from resblock_leakyrelu import resblock, conv_relu_res_relu_block
+from utils import AverageMeter, initialize_logger, save_checkpoint, record_loss
+from loss import loss, sam, rrmse_loss
 
 
 def main():
@@ -28,12 +28,12 @@ def whole_train():
     cudnn.benchmark = True
 
     # Dataset
-    train_data = DatasetFromHdf5('../data/hdf5_data/train_val-1-10-17_input+chann+20.h5')
+    train_data = DatasetFromHdf5('../data/hdf5_data/train_val-7-8-11_input+chann+20.h5')
     print(len(train_data))
-    val_data = DatasetFromHdf5('../data/hdf5_data/valid_val-1-10-17_input+chann+20.h5')
+    val_data = DatasetFromHdf5('../data/hdf5_data/valid_val-7-8-11_input+chann+20.h5')
     print(len(val_data))
     per_iter_time = len(train_data)
-    header = 'val-1-10-17_sam'
+    header = 'val-7-8-11_leaky_mrae+sam'
     # print(torch.cuda.device_count())
     # print(torch.cuda.is_available())
     # exit()
@@ -62,13 +62,14 @@ def whole_train():
 
     # Parameters, Loss and Optimizer
     start_epoch = 0
-    end_epoch = 200
-    init_lr = 0.0002
+    end_epoch = 300
+    init_lr = 0.0004
     iteration = 0
     record_test_loss = 1000
-    criterion = rrmse_loss
-    test_criterion = rrmse_loss
-    # test_criterion = rrmse
+    criterion = loss
+    test_criterion = loss
+    # criterion = sam
+    # test_criterion = sam
     optimizer = torch.optim.Adam(model.parameters(), lr=init_lr, betas=(0.9, 0.999), eps=1e-09, weight_decay=0)
 
     model_path = './models/'
@@ -90,6 +91,14 @@ def whole_train():
             iteration = checkpoint['iter']
             model.load_state_dict(checkpoint['state_dict'])
             optimizer.load_state_dict(checkpoint['optimizer'])
+            # end_epoch = 800
+            # init_lr = 0.0000000001
+
+    """ ERROR : 특정 시점 이후 loss nan 발생
+    원인 함수 찾기 : torch.autograd 함수 중에 NaN loss가 발생했을 경우 원인을 찾아주는 함수
+    https://ocxanc.tistory.com/54
+    """
+    # torch.autograd.set_detect_anomaly(True)
 
     for epoch in range(start_epoch + 1, end_epoch):
 
