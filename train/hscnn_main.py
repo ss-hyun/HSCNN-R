@@ -37,7 +37,10 @@ def whole_train():
     # print(torch.cuda.device_count())
     # print(torch.cuda.is_available())
     # exit()
+
     # Data Loader (Input Pipeline)
+    per_iter_time = len(train_data)
+
     train_data_loader = DataLoader(dataset=train_data,
                                    num_workers=3,
                                    batch_size=64,

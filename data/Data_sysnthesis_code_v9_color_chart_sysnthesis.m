@@ -41,7 +41,7 @@ end
 
 %% 450 nm (909) - 700 nm (1770)
 prefix = ['train'; 'valid'];
-input_channel=40;
+input_channel=20;
 output_channel=100;
 
 for p=1:1:size(prefix,1)
@@ -171,26 +171,45 @@ for p=1:1:size(prefix,1)
         %% 색상 위치 change, list에 포함된 번호 color를 맨 뒤로 보내기(53 color 기준)
 %         color_loc = [ 1 5 15 25 32 41 48 53 ];
         color_loc = [ 1 10 17 ];
+        offset_num = 0;
         F_front = [];
         F_back = [];
         N_front = [];
         N_back = [];
 
         for nn=1:1:total_colors
+            start_index = (nn-1)*5 + 7;
+            F_temp = []; %Filtered_colors(:,start_index:1:start_index+4);
+            N_temp = []; %N_colors(:,start_index:1:start_index+4);
+            for ii=1:1:5
+                %F_temp(:,(ii-1)*5+1) = Filtered_colors(:, start_index+ii-1);
+                %N_temp(:,(ii-1)*5+1) = N_colors(:, start_index+ii-1);
+                F_offset = Filtered_colors(:, start_index+ii-1);
+                N_offset = N_colors(:, start_index+ii-1);
+                offset_min = 0.11 - min(min(F_offset), min(N_offset));
+                offset_max = 0.89 - max(max(F_offset), max(N_offset));
+                offset_term = (offset_max - offset_min)/(offset_num - 1);
+                for jj=1:1:offset_num
+                    offset = offset_min + offset_term*(jj-1) + (rand(1)-0.5)*0.2;
+                    F_offset(:,jj+1) = F_offset(:,1) + offset;
+                    N_offset(:,jj+1) = N_offset(:,1) + offset;
+                end
+                F_temp = [ F_temp F_offset ];
+                N_temp = [ N_temp N_offset ];
+            end
             if find(color_loc==nn)
-                start_index = (nn-1)*5 + 7;
-                F_back = [ F_back Filtered_colors(:,start_index:1:start_index+4) ];
-                N_back = [ N_back N_colors(:,start_index:1:start_index+4) ];
+                F_back = [ F_back F_temp ];
+                N_back = [ N_back N_temp ];
             else
-                start_index = (nn-1)*5 + 7;
-                F_front = [ F_front Filtered_colors(:,start_index:1:start_index+4) ];
-                N_front = [ N_front N_colors(:,start_index:1:start_index+4) ];
+                F_front = [ F_front F_temp ];
+                N_front = [ N_front N_temp ];
             end
         end
         Filtered_colors = [ Filtered_colors(:,1:1:6) F_front F_back ];
         N_colors = [ N_colors(:,1:1:6) N_front N_back ];
-
         
+        mesure_per_color = 5;
+        num_per_color = (offset_num+1)*mesure_per_color;
         %% Data generation
         for nn=1:1:numbers_of_data
             % step1: synthesizing base image with random colors
@@ -210,16 +229,16 @@ for p=1:1:size(prefix,1)
             Filtered_data=zeros(img_size(1),img_size(2),input_channel);
             
             for cc=start_colors:1:end_colors
-                % 각 색상이 5번씩 측정 되었기 때문에 1-5 사이의 랜덤 넘버를 생성해 활용
-                rand_measure_num=round(rand(1)*4+1);
+                % 각 색상이 mesure_per_color(5)번씩 측정 되었고, 한 색상당 offset_num(4)개의 offset이 추가되므로 때문에 0~num_per_color-1(24) 사이의 랜덤 넘버를 생성해 활용
+                rand_measure_num=round(rand(1)*(num_per_color-1));
                 selected_area = squeeze(cropped_img==cc);
                 GT_color_matrix=zeros(img_size(1),img_size(2),output_channel);
                 Filtered_color_matrix=zeros(img_size(1),img_size(2),input_channel);
                 if find(selected_area>0)
-                    % data 형태가 1열 wavelength, 2-6 wihte 7-11 1번 색상, 12-16 2번
-                    % 색상----- 이기 때문에 cc*5+1+rand_measure_num index 사용
-                    GT_color_matrix=repmat(reshape(N_colors(:,cc*5+1+rand_measure_num),[1,1,output_channel]),[img_size(1),img_size(2),1]).*repmat(selected_area,[1,1,output_channel]);
-                    Filtered_color_matrix=repmat(reshape(Filtered_colors(:,cc*5+1+rand_measure_num),[1,1,input_channel]),[img_size(1),img_size(2),1]).*repmat(selected_area,[1,1,input_channel]);
+                    % data 형태가 1열 wavelength, 2-6 wihte 7-(7+num_per_color-1) 1번 색상, (7+num_per_color)-(7+num_per_color*2-1) 2번
+                    % 색상이 num_per_color개 있기 때문에 7+(cc-1)*num_per_color+rand_measure_num index 사용
+                    GT_color_matrix=repmat(reshape(N_colors(:,7+(cc-1)*num_per_color+rand_measure_num),[1,1,output_channel]),[img_size(1),img_size(2),1]).*repmat(selected_area,[1,1,output_channel]);
+                    Filtered_color_matrix=repmat(reshape(Filtered_colors(:,7+(cc-1)*num_per_color+rand_measure_num),[1,1,input_channel]),[img_size(1),img_size(2),1]).*repmat(selected_area,[1,1,input_channel]);
         %             figure(35), subplot(1,2,1),imagesc(selected_area),axis image
         %             subplot(1,2,2),imagesc(GT_color_matrix(:,:,1)),axis image
         %             pause()
