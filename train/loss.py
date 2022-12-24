@@ -30,8 +30,7 @@ class reconstruct_loss(nn.Module):
         reconstruction_loss = torch.mean(torch.abs(reconsturct_input - network_input))
         return reconstruction_loss
 
-
-def loss(outputs, label):
+def sam_mae(outputs, label):
     if outputs.dim() == 4:
         outputs = outputs.squeeze()
         label = label.squeeze()
@@ -52,9 +51,35 @@ def loss(outputs, label):
     # check = torch.isnan(sam)
     # if check[check == True].size(0):
     #     print(reflect_r[check == True], reflect_t[check == True])
-    rrmse = torch.abs(outputs - label) / label
+    mae = torch.abs(outputs - label)
 
-    return torch.mean(sam) + torch.mean(rrmse.view(-1))
+    return torch.mean(sam) + torch.mean(mae.view(-1))
+
+def sam_mrae(outputs, label):
+    if outputs.dim() == 4:
+        outputs = outputs.squeeze()
+        label = label.squeeze()
+
+    reflect_t = torch.transpose(outputs.view([label.shape[0], -1]), 0, 1)
+    reflect_r = torch.transpose(label.view([label.shape[0], -1]), 0, 1)
+
+    """ ERROR : Function 'TransposeBackward0' returned nan values in its 0th output
+    AcosBackward actually only works in the range (-1, 1), i.e. it cannot handle values that are exactly -1 or 1. 
+    If your inputs are in the range [-1, 1] (i.e. they might contain -1 and 1), a simple fix could be to use 
+    torch.clamp(x, -0.99999, 0.99999) before applying the arccos on x. 
+    https://github.com/pytorch/pytorch/issues/61810 
+    """
+    in_sam = (reflect_r * reflect_t).sum(dim=1) \
+             / torch.sqrt((reflect_t ** 2).sum(dim=1) * (reflect_r ** 2).sum(dim=1))
+    sam = torch.arccos(torch.clamp(in_sam, -0.9999999, 0.9999999))
+
+    # check = torch.isnan(sam)
+    # if check[check == True].size(0):
+    #     print(reflect_r[check == True], reflect_t[check == True])
+    mrae = torch.abs(outputs - label) / label
+
+    return torch.mean(sam) + torch.mean(mrae.view(-1))
+
 
 def sam(outputs, label):
     if outputs.dim() == 4:
@@ -70,11 +95,11 @@ def sam(outputs, label):
 
     return torch.mean(sam)
 
-def rrmse_loss(outputs, label):
+def mrae(outputs, label):
     """Computes the rrmse value"""
     if outputs.dim() == 4:
         outputs = outputs.squeeze()
         label = label.squeeze()
     error = torch.abs(outputs - label) / label
-    rrmse = torch.mean(error.view(-1))
-    return rrmse
+    mrae = torch.mean(error.view(-1))
+    return mrae

@@ -13,9 +13,9 @@ import scipy.io as sio
 import math
 
 from dataset import DatasetFromHdf5
-from resblock_leakyrelu import resblock, conv_relu_res_relu_block
+from resblock import resblock, conv_relu_res_relu_block
 from utils import AverageMeter, initialize_logger, save_checkpoint, record_loss
-from loss import loss, sam, rrmse_loss
+from loss import sam_mae, sam_mrae, sam, mrae
 
 
 def main():
@@ -28,12 +28,12 @@ def whole_train():
     cudnn.benchmark = True
 
     # Dataset
-    train_data = DatasetFromHdf5('../data/hdf5_data/train_val-7-8-11_input+chann+20.h5')
+    train_data = DatasetFromHdf5('../data/hdf5_data/train_val-7-8-14_input+chann+20.h5')
     print(len(train_data))
-    val_data = DatasetFromHdf5('../data/hdf5_data/valid_val-7-8-11_input+chann+20.h5')
+    val_data = DatasetFromHdf5('../data/hdf5_data/valid_val-7-8-14_input+chann+20.h5')
     print(len(val_data))
     per_iter_time = len(train_data)
-    header = 'val-7-8-11_leaky_mrae+sam'
+    header = 'val-7-8-14_mrae'
     # print(torch.cuda.device_count())
     # print(torch.cuda.is_available())
     # exit()
@@ -65,14 +65,12 @@ def whole_train():
 
     # Parameters, Loss and Optimizer
     start_epoch = 0
-    end_epoch = 300
-    init_lr = 0.0004
+    end_epoch = 200
+    init_lr = 0.0002
     iteration = 0
     record_test_loss = 1000
-    criterion = loss
-    test_criterion = loss
-    # criterion = sam
-    # test_criterion = sam
+    criterion = mrae
+    test_criterion = mrae
     optimizer = torch.optim.Adam(model.parameters(), lr=init_lr, betas=(0.9, 0.999), eps=1e-09, weight_decay=0)
 
     model_path = './models/'
@@ -113,9 +111,10 @@ def whole_train():
 
         # Save model
         if test_loss < record_test_loss or epoch == end_epoch or epoch == end_epoch / 2:
-            record_test_loss = test_loss
             save_checkpoint(model_path, epoch, iteration, model, optimizer, layer
                             , input_channel, output_channel, header, test_loss)
+            if test_loss < record_test_loss:
+                record_test_loss = test_loss
 
         # print loss 
         end_time = time.time()
