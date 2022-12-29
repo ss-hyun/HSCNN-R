@@ -95,10 +95,6 @@ def reconstruction(rgb, model):
     return img_res_limits
 
 
-def rrmse(img_res, img_gt):
-    """Calculate the relative RMSE"""
-    error = torch.abs(img_res - img_gt) / img_gt
-    rrmse = torch.mean(error.view(-1))
     # rrmse = np.mean((np.sqrt(np.power(error, 2))))
     # chan = img_gt.shape[0]
     # flat_error = error.clone().detach().view([chan, -1])
@@ -127,5 +123,3 @@ def rrmse(img_res, img_gt):
         #     torch.abs((flat_outputs[i] - flat_outputs[lf]) - (flat_label[i] - flat_label[lf]))
         #     )
     # g_error = torch.mean(flat_error.view(-1))
-
-    return rrmse
