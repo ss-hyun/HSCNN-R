@@ -1,4 +1,5 @@
-close all, clear all, clc
+function   generate_data_rgb_ntire(label_tag, input_channel, output_channel, amount_train_img, amount_valid_image)
+% close all, clear all, clc
 
 
 %% global variable              
@@ -10,15 +11,15 @@ global CREATED_FLAG;
 %% Initialization the patch and stride
 size_input=50;
 size_label=50;
-label_dimension=100;
-data_dimension=40;
+label_dimension=output_channel;
+data_dimension=input_channel;
 stride=80;
 
 
 prefix = ['train'; 'valid'];
 % type = 'clean';
 output_dir = './hdf5_data/';
-label = ['_val-1-10-17_input+chann+' int2str(data_dimension)];
+label = label_tag;
     
 %% For loop  RGB-HS-HD5
 for p=1:1:size(prefix,1)
@@ -31,9 +32,9 @@ for p=1:1:size(prefix,1)
 
     input_dir = [ pre '_data/' ];
     if strcmp(pre, 'train') == 1
-        amount_hd5_image=200;  % 한 h5 file 에 들어가는 image num
+        amount_hd5_image=amount_train_img;  % 한 h5 file 에 들어가는 image num
     else
-        amount_hd5_image=80;
+        amount_hd5_image=amount_valid_image;
     end
     input_data = dir(fullfile(input_dir, '*.mat'));
     order= randperm(size(input_data,1));
