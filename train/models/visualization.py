@@ -3,15 +3,20 @@ import matplotlib.pyplot as plt
 import pandas as pd
 from matplotlib.animation import FuncAnimation
 
-
 f, axes = plt.subplots(1, 2)
 f.set_size_inches((14, 6))
 f.suptitle('Loss', fontsize=15)
 
+recent = sorted(list(map(lambda fname: (fname, os.path.getctime(fname)),
+                         list(filter(lambda fname: os.path.isdir(fname), os.listdir('.'))))
+                     ), key=lambda x: x[1], reverse=True)[0][0]
+
+path = recent + '/'
+
 
 def animate(i):
     try:
-        data = pd.read_csv('loss.csv')
+        data = pd.read_csv(path + 'loss.csv')
     except pd.errors.EmptyDataError:
         axes[0].cla()
         axes[1].cla()
