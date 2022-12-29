@@ -18,17 +18,40 @@ white_bg=repmat(average_white_bg,[1 size(Ref_data,2)]);
 
 
 %% Parameter
-input_channel=50;
+input_channel=20;
 output_channel=100;
-mix_color = false;
-% color_loc = [ 1 5 15 25 32 41 48 53 ];
-black = false;
+mix_color = false;   % color_loc = [ 1 5 15 25 32 41 48 53 ];
+black = true;
+black_valid = true;
+
+mesure_per_color = 5; % 주어진 data(GT_data)에서 color 당 측정 횟수
 total_colors = 23;    % 측정 color 기준
 val_colors = 3;
-color_loc = [ 7 8 14 ];
-offset_num = 0;
+color_loc = [ 21 22 23 ];
+offset_num = 9;
+if offset_num ~= 0
+    label_tag = ['_offset'];
+end
+
+prefix = ['train'; 'valid'];
+numbers_of_datas = [200; 50];
 base_size_list = [ 500 500 800 800 ];   % 기본 바탕 이미지 크기
 seg_size_list = [ 50 25 40 80 ];        % 구역 segmentation 크기
+if black
+    label_tag = ['_black_val-'];
+    total_colors=total_colors+1;
+else
+    label_tag = ['_val-'];
+end
+for i=1:1:val_colors
+    label_tag = [label_tag int2str(color_loc(i)) '-'];
+end
+if black_valid
+    val_colors = val_colors+1;
+    label_tag = [label_tag 'b-'];
+    color_loc = [color_loc total_colors];
+end
+label_tag = [ label_tag(1:size(label_tag,2)-1) '_input+chann+' int2str(input_channel)];
 
 
 %% Data sysnthesis
@@ -41,7 +64,6 @@ Normalized_colors = Normalized_colors(:,7:121);
 if black
     sz=size(Normalized_colors);
     Normalized_colors = [ Normalized_colors rand(sz(1),5)*1.0e-08];
-    total_colors=total_colors+1;
 end
 
 if mix_color
@@ -57,6 +79,8 @@ if mix_color
     total_colors=total_colors+length(color_pick_list);
 end
 
+wavelength = wavelength(909:1770);
+Normalized_colors = Normalized_colors(909:1770,:);
 
 %% Data viewing code (각 스펙트럼 확인)
 % for ii=1:1:23
@@ -67,43 +91,40 @@ end
 
 
 %% 450 nm (909) - 700 nm (1770)
-prefix = ['train'; 'valid'];
 for p=1:1:size(prefix,1)
     pre = prefix(p,:);
     save_dir = [ pre '_data/' ];
     name_start = 0;  
+    numbers_of_data = numbers_of_datas(p,:);
 
     %% Parameters (여기서 파라미터 변환 가능)
     if strcmp(pre, 'train') == 1
-        numbers_of_data = 50;
         start_color = 1;
-%         end_color = 45;
         end_color = total_colors - val_colors;
     else
-        numbers_of_data = 20;
         start_color = total_colors - val_colors + 1;
         end_color = total_colors;
     end
-    img_size = [ 250 250 ]; % DL에 사용할 이미지 크기
-    
+
     if total_colors < end_color
         disp("check end colors")
         return
     end
 
+    img_size = [ 250 250 ]; % DL에 사용할 이미지 크기
+    
     for sz=1:1:length(base_size_list)
         base_size = [ base_size_list(sz) base_size_list(sz) ]; % 기본 바탕 이미지 크기
         seg_size = seg_size_list(sz);
 
-        filtered_w_length=imresize(wavelength(909:1770),[input_channel,1]);
+        filtered_w_length=imresize(wavelength,[input_channel,1]);
         % filter_transmittance=[1:1:output_channel]*0.4/output_channel+0.8;
         filter_band_width=round(linspace(15,75,output_channel));
-    
-        %% Reshape_GT data
-        w_length=imresize(wavelength(909:1770), [output_channel,1]);
-        N_colors=imresize(Normalized_colors(909:1770,:), [output_channel,size(Normalized_colors,2)]);
+
     
         %% Data viewing code for resized data (output channel 개수로 변환된 데이터 확인)
+%        w_length=imresize(wavelength, [output_channel,1]);
+%        N_colors=imresize(Normalized_colors, [output_channel,size(Normalized_colors,2)]);
 %         for ii=1:1:total_colors
 %             figure(35), plot(w_length, N_colors(:,ii*5+2)), title(num2str(ii)),ylim([0 1])
 %             pause()
@@ -137,8 +158,62 @@ for p=1:1:size(prefix,1)
         %     pause(0.1)
         % end
 
+
+        %% offset 추가
+        %% 색상 위치 change, list에 포함된 번호 color를 맨 뒤로 보내기
+        GT_front = [];
+        GT_back = [];
+%         N_front = [];
+%         N_back = [];
+
+        for nn=1:1:total_colors
+            start_index = (nn-1)*5 + 1;
+            GT_temp = []; %Filtered_colors(:,start_index:1:start_index+4);
+%             N_temp = []; %N_colors(:,start_index:1:start_index+4);
+            for ii=1:1:mesure_per_color
+                %F_temp(:,(ii-1)*5+1) = Filtered_colors(:, start_index+ii-1);
+                %N_temp(:,(ii-1)*5+1) = N_colors(:, start_index+ii-1);
+                GT_offset = Normalized_colors(:, start_index+ii-1);
+%                 N_offset = N_colors(:, start_index+ii-1);
+                offset_min = - min(GT_offset); %, min(N_offset));
+                offset_max = 1 - max(GT_offset); %, max(N_offset));
+                offset_term = (offset_max - offset_min);
+                for jj=1:1:offset_num
+                    offset = offset_min + offset_term*rand(1);
+                    GT_offset(:,jj+1) = GT_offset(:,1) + offset;
+%                     N_offset(:,jj+1) = N_offset(:,1) + offset;
+                end
+                GT_temp = [ GT_temp GT_offset ];
+%                 N_temp = [ N_temp N_offset ];
+            end
+            if find(color_loc==nn)
+                GT_back = [ GT_back GT_temp ];
+%                 N_back = [ N_back N_temp ];
+            else
+                GT_front = [ GT_front GT_temp ];
+%                 N_front = [ N_front N_temp ];
+            end
+        end
+        GT_colors = [ GT_front GT_back ];
+        if (min(min(GT_colors)) < 0) || (min(max(GT_colors)) > 1)
+            disp("check offset");
+            return
+        end
+%         N_colors = [ N_front N_back ];
+
+        
+        %% Reshape_GT data
+        Normalized_colors = GT_colors;
+        w_length=imresize(wavelength, [output_channel,1]);
+        N_colors=imresize(Normalized_colors, [output_channel,size(Normalized_colors,2)]);
+        if (min(min(N_colors)) < 0) || (min(max(N_colors)) > 1)
+            disp("check force normalized data");
+            return
+        end
+
+
         %% Filter generation
-        filter_pos=round(linspace(909,1700,input_channel));
+        filter_pos=round(linspace(1,792,input_channel)); % 909-1770 >> 909-1700
         filters=zeros(length(wavelength),input_channel);
 %         length(filter_pos)
         for ff=1:1:length(filter_pos)
@@ -152,7 +227,7 @@ for p=1:1:size(prefix,1)
 
         %% Filter applied spectrum
         Filtered_colors=[];
-        for cc=2:1:size(Normalized_colors,2)
+        for cc=1:1:size(Normalized_colors,2)
             temp_color=Normalized_colors(:,cc);
 %             figure(35), plot(wavelength,temp_color),axis([450 700 0 1])
 %             pause(0.1)
@@ -173,6 +248,7 @@ for p=1:1:size(prefix,1)
 %                 pause()
             Filtered_colors(:,cc)=temp_filtered_color;
         end
+
 % for i=1:1:23
 %     ii = 2+5*i
 %     figure(12),
@@ -187,44 +263,7 @@ for p=1:1:size(prefix,1)
 %         save(name,'w_length','N_colors', 'filtered_w_length', 'Filtered_colors','-v7.3')
 %         return
 
-        %% 색상 위치 change, list에 포함된 번호 color를 맨 뒤로 보내기
-        F_front = [];
-        F_back = [];
-        N_front = [];
-        N_back = [];
-
-        for nn=1:1:total_colors
-            start_index = (nn-1)*5 + 1;
-            F_temp = []; %Filtered_colors(:,start_index:1:start_index+4);
-            N_temp = []; %N_colors(:,start_index:1:start_index+4);
-            for ii=1:1:5
-                %F_temp(:,(ii-1)*5+1) = Filtered_colors(:, start_index+ii-1);
-                %N_temp(:,(ii-1)*5+1) = N_colors(:, start_index+ii-1);
-                F_offset = Filtered_colors(:, start_index+ii-1);
-                N_offset = N_colors(:, start_index+ii-1);
-                offset_min = - min(min(F_offset), min(N_offset));
-                offset_max = 1 - max(max(F_offset), max(N_offset));
-                offset_term = (offset_max - offset_min);
-                for jj=1:1:offset_num
-                    offset = offset_min + offset_term*rand(1);
-                    F_offset(:,jj+1) = F_offset(:,1) + offset;
-                    N_offset(:,jj+1) = N_offset(:,1) + offset;
-                end
-                F_temp = [ F_temp F_offset ];
-                N_temp = [ N_temp N_offset ];
-            end
-            if find(color_loc==nn)
-                F_back = [ F_back F_temp ];
-                N_back = [ N_back N_temp ];
-            else
-                F_front = [ F_front F_temp ];
-                N_front = [ N_front N_temp ];
-            end
-        end
-        Filtered_colors = [ F_front F_back ];
-        N_colors = [ N_front N_back ];
         
-        mesure_per_color = 5;
         num_per_color = (offset_num+1)*mesure_per_color;
         %% Data generation
         for nn=1:1:numbers_of_data
@@ -292,3 +331,5 @@ for p=1:1:size(prefix,1)
         name_start = name_start + numbers_of_data;
     end
 end
+
+generate_data_rgb_ntire(label_tag, input_channel, output_channel, numbers_of_datas(1), numbers_of_datas(2))
