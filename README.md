@@ -2,7 +2,7 @@
 
 Suhyun Kim, Sera Jung, Jonghee Yoon. Journal of Physics D: Applied Physics. *[Paper](https://iopscience.iop.org/article/10.1088/1361-6463/acae31/pdf)*
 
-This repo is an image restoration algorithm model for spectral reconstruction used in the experiment. It was adapted for experiments based on *[HSCNN-R](https://ieeexplore.ieee.org/stamp/stamp.jsp?tp=&arnumber=8575292&tag=1)*, a second-place model in CVPR Workshop 2018.
+This repo is an image restoration algorithm model for spectral reconstruction used in the experiment. It was adapted for experiments based on *[HSCNN-R](https://openaccess.thecvf.com/content_cvpr_2018_workshops/papers/w13/Shi_HSCNN_Advanced_CNN-Based_CVPR_2018_paper.pdf)*, a second-place model in CVPR Workshop 2018.
 
 
 ### Abstract
